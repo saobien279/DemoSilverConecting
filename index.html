@@ -228,7 +228,7 @@
         }
 
         /* =========================================
-           ELDER FLOW STYLES - KEEP AS IS
+           ELDER FLOW STYLES - UPDATED WITH AI PROMPT
            ========================================= */
         .theme-elder {
             background-color: var(--elder-bg);
@@ -458,7 +458,7 @@
             border-color: rgba(241, 196, 15, 0.4);
         }
 
-        /* Live Screen for Elder */
+        /* Live Screen for Elder - UPDATED WITH AI PROMPT */
         .elder-live-screen {
             height: 100%;
             position: relative;
@@ -511,6 +511,132 @@
             transform: scaleX(-1);
         }
 
+        /* NEW: AI Prompt Button and Panel */
+        .ai-prompt-container {
+            position: absolute;
+            bottom: 120px;
+            right: 20px;
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .ai-prompt-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            border: none;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+            transition: all 0.3s ease;
+            animation: glow 2s infinite alternate;
+        }
+
+        .ai-prompt-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.6);
+        }
+
+        .ai-prompt-btn:active {
+            transform: scale(0.95);
+        }
+
+        .ai-prompt-panel {
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius-lg);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            padding: 20px;
+            width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .ai-prompt-panel.active {
+            display: block;
+        }
+
+        .ai-prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ai-prompt-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: white;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-prompt-close {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .ai-prompt-close:hover {
+            color: white;
+        }
+
+        .ai-prompt-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ai-prompt-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius-md);
+            padding: 15px;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .ai-prompt-item:hover {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: rgba(52, 152, 219, 0.4);
+            transform: translateX(-5px);
+        }
+
+        .ai-prompt-item:active {
+            transform: translateX(0);
+        }
+
+        .ai-prompt-text {
+            color: white;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .ai-prompt-hint {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 5px;
+            font-style: italic;
+        }
+
         .elder-live-controls {
             position: absolute;
             bottom: 30px;
@@ -518,11 +644,12 @@
             right: 0;
             display: flex;
             justify-content: center;
+            gap: 20px;
             z-index: 20;
         }
 
         .btn-elder-end {
-            width: 70%;
+            width: 180px;
             padding: 20px;
             font-family: 'Outfit', sans-serif;
             font-size: 20px;
@@ -1840,8 +1967,13 @@
         }
 
         @keyframes glow {
-            0%, 100% { box-shadow: 0 0 10px rgba(123, 104, 238, 0.5); }
-            50% { box-shadow: 0 0 20px rgba(123, 104, 238, 0.8); }
+            0%, 100% { box-shadow: 0 0 10px rgba(52, 152, 219, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(52, 152, 219, 0.8); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         /* Loading Spinner */
@@ -1870,6 +2002,7 @@
             .profile-stats { grid-template-columns: 1fr; }
             .live-panels-container { width: 280px; }
             .live-video-container { height: 45%; }
+            .ai-prompt-panel { width: 280px; }
         }
     </style>
 </head>
@@ -2039,7 +2172,7 @@
                     </div>
                 </div>
 
-                <!-- View 2: Live Session (COMPLETELY REDESIGNED WITH COLLAPSIBLE PANELS) -->
+                <!-- View 2: Live Session -->
                 <div id="view-live" class="live-session-view hidden">
                     <div class="live-header">
                         <div class="live-title">
@@ -2248,7 +2381,10 @@
                 step: 1,
                 sessionActive: false,
                 viewerCount: 52,
-                timer: null
+                timer: null,
+                aiPromptActive: false,
+                silentTimer: null,
+                silenceStart: null
             },
             student: {
                 bookedSessions: [],
@@ -2270,6 +2406,58 @@
                 }
             }
         };
+
+        // AI Prompt suggestions for elders
+        const aiPrompts = [
+            {
+                id: 1,
+                text: "Bác có thể kể về kỷ niệm đáng nhớ nhất trong nghề sales không ạ?",
+                category: "Kỷ niệm",
+                hint: "Gợi ý này giúp bác chia sẻ câu chuyện cá nhân"
+            },
+            {
+                id: 2,
+                text: "Thời bao cấp, bác gặp khó khăn gì nhất trong công việc?",
+                category: "Khó khăn",
+                hint: "Giúp các bạn trẻ hiểu về thử thách thời kỳ đó"
+            },
+            {
+                id: 3,
+                text: "Bác có lời khuyên gì cho các bạn trẻ muốn kinh doanh không?",
+                category: "Lời khuyên",
+                hint: "Chia sẻ kinh nghiệm quý báu cho thế hệ sau"
+            },
+            {
+                id: 4,
+                text: "Kỹ năng nào quan trọng nhất với người làm sales thời đó?",
+                category: "Kỹ năng",
+                hint: "Giúp các bạn trẻ học hỏi kỹ năng cần thiết"
+            },
+            {
+                id: 5,
+                text: "Bác nhớ nhất điều gì về khách hàng thời bao cấp?",
+                category: "Khách hàng",
+                hint: "Kể về mối quan hệ với khách hàng"
+            },
+            {
+                id: 6,
+                text: "Công việc sales đã thay đổi cuộc đời bác thế nào?",
+                category: "Ảnh hưởng",
+                hint: "Chia sẻ tác động của công việc đến cuộc sống"
+            },
+            {
+                id: 7,
+                text: "Bác có thể so sánh sales thời xưa và nay không?",
+                category: "So sánh",
+                hint: "Giúp thấy sự khác biệt qua các thời kỳ"
+            },
+            {
+                id: 8,
+                text: "Bài học quý giá nhất bác học được từ nghề sales là gì?",
+                category: "Bài học",
+                hint: "Tổng kết kinh nghiệm nhiều năm"
+            }
+        ];
 
         // Sample notes data
         const sampleNotes = [
@@ -2381,7 +2569,9 @@
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
                 video.style.display = 'block';
-                document.getElementById('video-placeholder').style.display = 'none';
+                if (document.getElementById('video-placeholder')) {
+                    document.getElementById('video-placeholder').style.display = 'none';
+                }
                 return stream;
             } catch (error) {
                 console.error('Camera error:', error);
@@ -2403,7 +2593,7 @@
         }
 
         // ==========================================
-        // ELDER FLOW FUNCTIONS
+        // ELDER FLOW FUNCTIONS - UPDATED WITH AI PROMPT
         // ==========================================
         function startElderFlow() {
             document.getElementById('screen-landing').classList.add('hidden');
@@ -2436,6 +2626,13 @@
 
         function showVoiceFeedback(text) {
             const container = document.getElementById('screen-elder');
+            
+            // Remove any existing voice feedback
+            const existingFeedback = container.querySelector('.voice-feedback');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+            
             const feedback = document.createElement('div');
             feedback.className = 'voice-feedback';
             feedback.innerHTML = `
@@ -2533,7 +2730,7 @@
                 }, 2000);
             } 
             else if (step === 3) {
-                // Live session screen
+                // Live session screen with AI Prompt feature
                 container.innerHTML = `
                     <div class="elder-live-screen">
                         <div class="elder-live-header">
@@ -2547,6 +2744,27 @@
                         
                         <video id="elder-live-cam" class="elder-live-video" autoplay muted playsinline></video>
                         
+                        <!-- AI Prompt Feature -->
+                        <div class="ai-prompt-container">
+                            <div class="ai-prompt-panel" id="ai-prompt-panel">
+                                <div class="ai-prompt-header">
+                                    <div class="ai-prompt-title">
+                                        <i class="fas fa-robot"></i>
+                                        AI Gợi ý câu chuyện
+                                    </div>
+                                    <button class="ai-prompt-close" onclick="toggleAiPrompt()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="ai-prompt-list" id="ai-prompt-list">
+                                    <!-- AI prompts will be loaded here -->
+                                </div>
+                            </div>
+                            <button class="ai-prompt-btn" onclick="toggleAiPrompt()" id="ai-prompt-btn">
+                                <i class="fas fa-lightbulb"></i>
+                            </button>
+                        </div>
+                        
                         <div class="elder-live-controls">
                             <button class="btn-elder-end" onclick="elderConfirmEnd()">
                                 <i class="fas fa-moon"></i> NGHỈ NGƠI
@@ -2558,9 +2776,15 @@
                 // Start camera for live session
                 startCamera('elder-live-cam');
                 
+                // Load AI prompts
+                loadAiPrompts();
+                
                 // Start session timer
                 appState.elder.sessionActive = true;
                 startElderSessionTimer();
+                
+                // Start silence detection for auto AI prompts
+                startSilenceDetection();
                 
                 // Simulate viewer count updates
                 setInterval(() => {
@@ -2583,6 +2807,80 @@
             }
         }
 
+        function loadAiPrompts() {
+            const promptList = document.getElementById('ai-prompt-list');
+            if (!promptList) return;
+            
+            promptList.innerHTML = aiPrompts.map(prompt => `
+                <div class="ai-prompt-item" onclick="useAiPrompt(${prompt.id})">
+                    <div class="ai-prompt-text">${prompt.text}</div>
+                    <div class="ai-prompt-hint">${prompt.hint}</div>
+                </div>
+            `).join('');
+        }
+
+        function toggleAiPrompt() {
+            const panel = document.getElementById('ai-prompt-panel');
+            const button = document.getElementById('ai-prompt-btn');
+            
+            if (panel.classList.contains('active')) {
+                panel.classList.remove('active');
+                button.innerHTML = '<i class="fas fa-lightbulb"></i>';
+                appState.elder.aiPromptActive = false;
+            } else {
+                panel.classList.add('active');
+                button.innerHTML = '<i class="fas fa-times"></i>';
+                appState.elder.aiPromptActive = true;
+                
+                // Reset silence timer when opening prompt panel
+                resetSilenceTimer();
+            }
+        }
+
+        function useAiPrompt(promptId) {
+            const prompt = aiPrompts.find(p => p.id === promptId);
+            if (!prompt) return;
+            
+            // Close the panel
+            toggleAiPrompt();
+            
+            // Show the prompt as voice feedback
+            showVoiceFeedback(`AI gợi ý: ${prompt.text}`);
+            
+            // Show toast for user
+            showToast('AI đã gợi ý chủ đề cho bác!', 'success');
+            
+            // Reset silence timer since user is now speaking
+            resetSilenceTimer();
+        }
+
+        function startSilenceDetection() {
+            // Start tracking silence
+            appState.elder.silenceStart = Date.now();
+            
+            // Check for silence every 10 seconds
+            appState.elder.silentTimer = setInterval(() => {
+                if (!appState.elder.sessionActive || appState.elder.aiPromptActive) return;
+                
+                const silenceDuration = Date.now() - appState.elder.silenceStart;
+                const silenceSeconds = Math.floor(silenceDuration / 1000);
+                
+                // If silent for more than 30 seconds, suggest a prompt
+                if (silenceSeconds > 30) {
+                    // Randomly suggest a prompt (20% chance each check)
+                    if (Math.random() < 0.2) {
+                        const randomPrompt = aiPrompts[Math.floor(Math.random() * aiPrompts.length)];
+                        showVoiceFeedback(`AI gợi ý (sau ${silenceSeconds} giây im lặng): ${randomPrompt.text}`);
+                        resetSilenceTimer();
+                    }
+                }
+            }, 10000);
+        }
+
+        function resetSilenceTimer() {
+            appState.elder.silenceStart = Date.now();
+        }
+
         function startElderSessionTimer() {
             let seconds = 0;
             appState.elder.timer = setInterval(() => {
@@ -2596,6 +2894,7 @@
                     ];
                     const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
                     showVoiceFeedback(randomQuestion);
+                    resetSilenceTimer();
                 }
             }, 1000);
         }
@@ -2669,6 +2968,7 @@
         function endElderSession() {
             appState.elder.sessionActive = false;
             clearInterval(appState.elder.timer);
+            clearInterval(appState.elder.silentTimer);
             
             // Stop camera streams
             const videoElements = document.querySelectorAll('video');
@@ -2696,10 +2996,15 @@
                             <div class="stat-label">Lượt yêu thích</div>
                             <div class="stat-value">312</div>
                         </div>
+                        <div class="end-stat-item">
+                            <div class="stat-label">AI gợi ý</div>
+                            <div class="stat-value">${Math.floor(Math.random() * 5) + 3}</div>
+                        </div>
                     </div>
                     <div class="end-message">
                         Bác đã truyền cảm hứng cho ${appState.elder.viewerCount} bạn trẻ hôm nay.<br>
-                        Các sinh viên đã lưu lại ${appState.student.savedNotes.length} ý hay từ bác.
+                        Các sinh viên đã lưu lại ${appState.student.savedNotes.length} ý hay từ bác.<br>
+                        AI đã hỗ trợ bác ${Math.floor(Math.random() * 5) + 3} lần khi bác cần gợi ý.
                     </div>
                     <div class="auto-close-timer">
                         Ứng dụng sẽ tự động tắt sau <span id="final-countdown">5</span>s
