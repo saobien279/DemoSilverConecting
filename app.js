@@ -730,3 +730,358 @@ document.addEventListener('DOMContentLoaded', () => {
   const vh = document.getElementById('view-home');
   if (vh) { vh.style.display='flex'; vh.style.flexDirection='column'; }
 });
+
+/* ══════════════════════════════════════════════════════
+   DEMO CONTROLLER
+   Floating panel for presenters — trigger on demand
+══════════════════════════════════════════════════════ */
+const Demo = (() => {
+
+  let panelOpen = false;
+  let voiceRate  = 0.88;
+  // Track which screen we're on
+  let ctx = 'landing'; // 'landing' | 'elder-welcome' | 'elder-mirror' | 'elder-live' | 'student-home' | 'student-live'
+
+  /* Excellent comment samples — hand-picked, always impactful */
+  const DEMO_EXCELLENT_ELDER = [
+    { u: 'Hải Đăng',    c: 'Thưa bác, em vừa trải qua thất bại lớn và rất nản lòng. Nghe câu chuyện của bác, em hiểu rằng thất bại chỉ là bước đệm. Cảm ơn bác từ tận đáy lòng!', col: '#E74C3C' },
+    { u: 'Phương Linh', c: 'Thưa bác, con đường bác đã đi qua đã dạy cho em rằng kiên trì và yêu thương là hai thứ không bao giờ lỗi thời. Em sẽ nhớ buổi hôm nay mãi mãi!',       col: '#9D8AFF' },
+    { u: 'Mai Phương',  c: 'Em 20 tuổi, rất hoang mang về tương lai. Câu "hãy sống hết mình với hiện tại" của bác — đó là điều em cần nghe nhất hôm nay!',                         col: '#FF9A3C' },
+    { u: 'Bảo Châu',    c: 'Cảm ơn bác đã dành thời gian cho chúng em! Buổi hôm nay thực sự thay đổi cách em nhìn về cuộc sống và tương lai.',                                     col: '#7B68EE' },
+  ];
+  const DEMO_EXCELLENT_STUDENT = [
+    { u: 'Bảo Châu',   c: 'Thưa bác, em đang trong một mối quan hệ rất khó khăn. Câu chuyện của bác cho em thấy rằng kiên nhẫn và yêu thương thật sự có thể vượt qua tất cả. Em cảm ơn bác từ tận đáy lòng!', col: '#7B68EE' },
+    { u: 'Hải Đăng',   c: 'Thưa bác, em vừa trải qua chia tay rất đau lòng. Nghe bác kể về 40 năm yêu nhau, em nhận ra mình còn trẻ lắm và tình yêu thật sự cần xây dựng chứ không chỉ cảm xúc nhất thời. Bác đã giúp em đứng dậy!', col: '#E74C3C' },
+    { u: 'Kim Ngân',   c: 'Mình thấy thế hệ mình đang thiếu đi sự kiên nhẫn trong tình yêu. Nghe bác nói, mình hiểu rằng yêu thật sự là một hành trình dài cần cả hai cùng xây dựng mỗi ngày.', col: '#f093fb' },
+    { u: 'Quang Huy',  c: 'Thưa bác, em là sinh viên năm 3 đang rất mất phương hướng. Hôm nay nghe bác kể về cuộc đời, em thấy rõ rằng mỗi khó khăn đều có ý nghĩa và tương lai phía trước vẫn còn rất nhiều điều tươi đẹp!', col: '#43e97b' },
+  ];
+  const DEMO_GOOD = [
+    { u: 'Minh Châu',  c: 'Câu chuyện của bác chạm đến trái tim em rất nhiều! 💕',         col: '#f093fb' },
+    { u: 'Lan Anh',    c: 'Em đã lưu câu nói này vào Smart Notes rồi bác ơi!',              col: '#FF6B8B' },
+    { u: 'Văn Tùng',   c: 'Thế hệ gen Z chúng em rất cần nghe những bài học như thế này!', col: '#4facfe' },
+    { u: 'Tuấn Anh',   c: 'Livestream hay nhất em từng xem! 🔥',                            col: '#4facfe' },
+  ];
+  const DEMO_NORMAL = [
+    { u: 'Ngọc Ánh',  c: '❤️❤️❤️ Hay quá bác ơi!',             col: '#FF9A3C' },
+    { u: 'Khánh Linh',c: 'Em đang ngồi khóc rồi ạ 😭',          col: '#a18cd1' },
+    { u: 'Yến Nhi',   c: 'Bác kể tiếp đi ạ! 😊',                col: '#FFD700' },
+    { u: 'Hồng Nhung',c: '👏👏👏 Tuyệt vời!',                   col: '#FF6B8B' },
+    { u: 'Đức Anh',   c: 'Cảm ơn bác rất nhiều ạ! 🙏',          col: '#F1C40F' },
+  ];
+
+  let excellentElderIdx   = 0;
+  let excellentStudentIdx = 0;
+  let goodIdx    = 0;
+  let normalIdx  = 0;
+
+  function updateCtxLabel() {
+    const el = document.getElementById('dp-ctx');
+    if (!el) return;
+    const labels = {
+      'landing':        '📍 Đang ở: Trang chủ',
+      'elder-welcome':  '📍 Đang ở: Elder — Chào mừng',
+      'elder-mirror':   '📍 Đang ở: Elder — Soi gương',
+      'elder-live':     '📍 Đang ở: Elder LIVE 🔴',
+      'student-home':   '📍 Đang ở: Student — Trang chủ',
+      'student-live':   '📍 Đang ở: Student LIVE 🔴',
+    };
+    el.textContent = labels[ctx] || '📍 Đang ở: ' + ctx;
+  }
+
+  /* ── Toggle panel ── */
+  function toggle() {
+    panelOpen = !panelOpen;
+    const fab   = document.getElementById('demo-fab');
+    const panel = document.getElementById('demo-panel');
+    if (fab)   fab.classList.toggle('open', panelOpen);
+    if (panel) panel.classList.toggle('visible', panelOpen);
+    updateCtxLabel();
+  }
+
+  /* ── Detect current context ── */
+  function detectCtx() {
+    const isElder   = !document.getElementById('screen-elder')?.classList.contains('hidden');
+    const isStudent = !document.getElementById('screen-student')?.classList.contains('hidden');
+    if (!isElder && !isStudent) { ctx = 'landing'; return; }
+    if (isElder) {
+      if (!document.getElementById('elder-live')?.classList.contains('hidden'))    ctx = 'elder-live';
+      else if (!document.getElementById('elder-mirror')?.classList.contains('hidden')) ctx = 'elder-mirror';
+      else ctx = 'elder-welcome';
+    }
+    if (isStudent) {
+      const liveView = document.getElementById('view-live');
+      ctx = (liveView && !liveView.classList.contains('hidden') && liveView.style.display !== 'none')
+          ? 'student-live' : 'student-home';
+    }
+    updateCtxLabel();
+  }
+
+  /* ── Navigation shortcuts ── */
+  function goElder() {
+    detectCtx();
+    if (ctx === 'landing') SC.startElder();
+    ctx = 'elder-welcome'; updateCtxLabel();
+    _close();
+  }
+
+  function goElderLive() {
+    detectCtx();
+    if (ctx === 'landing' || ctx === 'student-home' || ctx === 'student-live') {
+      SC.startElder();
+      setTimeout(() => { SC.elderStep(3); ctx = 'elder-live'; updateCtxLabel(); }, 1200);
+    } else if (ctx === 'elder-welcome') {
+      SC.elderStep(3); ctx = 'elder-live'; updateCtxLabel();
+    } else if (ctx === 'elder-mirror') {
+      SC.elderStep(3); ctx = 'elder-live'; updateCtxLabel();
+    }
+    _close();
+  }
+
+  function goStudentLive() {
+    detectCtx();
+    if (ctx === 'landing') {
+      SC.startStudent();
+      setTimeout(() => {
+        SC.bookSession(document.querySelector('.btn-book'), '40 Năm Yêu Một Người');
+        ctx = 'student-live'; updateCtxLabel();
+      }, 600);
+    } else if (ctx === 'student-home') {
+      SC.switchTab('live'); ctx = 'student-live'; updateCtxLabel();
+    }
+    _close();
+  }
+
+  /* ── Fire comment on demand ── */
+  function fireComment(quality) {
+    detectCtx();
+    Voice.unlock();
+
+    if (ctx === 'elder-live') {
+      // Fire comment on elder video overlay
+      let cmt;
+      if (quality === 'excellent') {
+        cmt = { ...DEMO_EXCELLENT_ELDER[excellentElderIdx % DEMO_EXCELLENT_ELDER.length], q: 'excellent' };
+        excellentElderIdx++;
+      } else if (quality === 'good') {
+        cmt = { ...DEMO_GOOD[goodIdx % DEMO_GOOD.length], q: 'good' };
+        goodIdx++;
+      } else {
+        cmt = { ...DEMO_NORMAL[normalIdx % DEMO_NORMAL.length], q: 'normal' };
+        normalIdx++;
+      }
+      _addElderComment(cmt);
+
+    } else {
+      // Fire comment to student chat
+      let cmt;
+      if (quality === 'excellent') {
+        cmt = { ...DEMO_EXCELLENT_STUDENT[excellentStudentIdx % DEMO_EXCELLENT_STUDENT.length], q: 'excellent' };
+        excellentStudentIdx++;
+      } else if (quality === 'good') {
+        cmt = { ...DEMO_GOOD[goodIdx % DEMO_GOOD.length], q: 'good' };
+        goodIdx++;
+      } else {
+        cmt = { ...DEMO_NORMAL[normalIdx % DEMO_NORMAL.length], q: 'normal' };
+        normalIdx++;
+      }
+      _addStudentComment(cmt);
+    }
+  }
+
+  /* ── Elder toast triggers ── */
+  const TOAST_POOL = {
+    ai:   ['Có <strong>45 người</strong> mới vừa tham gia buổi live của bác!',
+           '90 bình luận trong 5 phút — buổi chia sẻ đang rất <strong>hot</strong> bác ơi! 🔥'],
+    q:    ['<strong>Bạn Ngọc Ánh</strong> hỏi: Bác ơi, điều gì giúp bác vượt qua giai đoạn khó khăn nhất ạ?',
+           '<strong>Bạn Hải Đăng</strong> hỏi: Thưa bác, bác định nghĩa thành công thật sự như thế nào ạ?',
+           '<strong>Bạn Bảo Châu</strong> hỏi: Điều bác muốn nhắn nhủ nhất với thế hệ gen Z là gì ạ?'],
+    star: ['<strong>125 bạn sinh viên</strong> vừa gửi ❤️ cho bác — mọi người rất xúc động!',
+           '<strong>18 sinh viên</strong> vừa lưu đoạn vừa rồi vào Smart Notes!'],
+  };
+  const _toastIdx = { ai:0, q:0, star:0 };
+
+  function elderToast(type) {
+    detectCtx();
+    const pool = TOAST_POOL[type] || TOAST_POOL.ai;
+    const msg  = pool[_toastIdx[type] % pool.length];
+    _toastIdx[type]++;
+    _showElderToast(msg, type, 6000);
+    _close();
+  }
+
+  /* ── Voice rate ── */
+  function setRate(r, btn) {
+    voiceRate = r;
+    document.querySelectorAll('.dp-speed-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  /* ── Reset ── */
+  function reset() { location.reload(); }
+
+  function _close() {
+    if (!panelOpen) return;
+    panelOpen = false;
+    document.getElementById('demo-fab')?.classList.remove('open');
+    document.getElementById('demo-panel')?.classList.remove('visible');
+  }
+
+  /* ═══════════════════════════════
+     Internal helpers (reach into SC internals via shared data)
+  ═══════════════════════════════ */
+  function _addElderComment(cmt) {
+    const stream = document.getElementById('elive-comment-stream');
+    if (!stream) { console.warn('Elder live screen not open'); return; }
+
+    // Remove oldest if overflow
+    const existing = stream.querySelectorAll('.elive-cmt');
+    if (existing.length >= 4) {
+      existing[0].style.animation = 'cmtFadeOut .3s ease forwards';
+      setTimeout(() => existing[0]?.remove(), 300);
+    }
+
+    const el = document.createElement('div');
+    el.className = `elive-cmt${cmt.q === 'excellent' ? ' excellent' : ''}`;
+    el.innerHTML = `
+      <div class="elive-cmt-inner">
+        <span class="elive-name-badge" style="background:${cmt.col}">${cmt.u}</span>
+        <span class="elive-cmt-text">${cmt.c}</span>
+      </div>`;
+    stream.appendChild(el);
+
+    // Update counter
+    const cc = document.getElementById('elder-comments');
+    if (cc) cc.textContent = parseInt(cc.textContent||0)+1;
+    const hh = document.getElementById('elder-hearts');
+    if (hh) hh.textContent = parseInt(hh.textContent||0) + Math.floor(Math.random()*4)+1;
+
+    setTimeout(() => {
+      el.style.animation = 'cmtFadeOut .4s ease forwards';
+      setTimeout(() => el?.remove(), 400);
+    }, 7000);
+
+    if (cmt.q === 'excellent') {
+      _showElderToast(
+        `<strong>${cmt.u}</strong>: "${cmt.c.substring(0,60)}${cmt.c.length>60?'...':''}"`,
+        'mic', 7500
+      );
+      Voice.speak(`Bình luận xuất sắc từ bạn ${cmt.u}: ${cmt.c}`, voiceRate);
+      // Voice bar
+      document.getElementById('elder-voice-bar')?.remove();
+      const bar = document.createElement('div');
+      bar.id = 'elder-voice-bar';
+      bar.className = 'voice-bar';
+      bar.innerHTML = `
+        <div class="voice-wave">
+          <span style="height:5px"></span><span style="height:11px"></span>
+          <span style="height:16px"></span><span style="height:11px"></span>
+          <span style="height:5px"></span>
+        </div>
+        <span>Đang đọc bình luận xuất sắc: <strong>${cmt.u}</strong></span>`;
+      document.getElementById('elder-live')?.appendChild(bar);
+      setTimeout(() => bar?.remove(), 7500);
+    }
+  }
+
+  function _addStudentComment(cmt) {
+    const now = () => new Date().toLocaleTimeString('vi',{hour:'2-digit',minute:'2-digit'});
+    // Find chat-msgs element
+    const msgs = document.getElementById('chat-msgs');
+    if (!msgs) {
+      // Student might be on home — switch to live first
+      SC.switchTab('live');
+      setTimeout(() => _addStudentComment(cmt), 800);
+      return;
+    }
+
+    // Create message element directly
+    const exc = cmt.q === 'excellent' ? ' excellent' : '';
+    const div = document.createElement('div');
+    div.className = 'user-msg';
+    div.innerHTML = `
+      <div class="msg-hdr">
+        <div class="msg-av" style="background:${cmt.col}">${cmt.u.charAt(0)}</div>
+        <div class="msg-uname">${cmt.u}</div>
+        <div class="msg-time">${now()}</div>
+      </div>
+      <div class="msg-bubble${exc}">${cmt.c}</div>`;
+    msgs.appendChild(div);
+
+    // Scroll
+    const cs = document.getElementById('chat-scroll');
+    if (cs) cs.scrollTop = cs.scrollHeight;
+
+    // Update badge
+    const cb = document.getElementById('chat-badge');
+    if (cb) cb.textContent = parseInt(cb.textContent||0)+1;
+
+    // Quality effects
+    if (cmt.q === 'excellent') {
+      _showStudentToast(
+        `<strong>${cmt.u}</strong>: "${cmt.c.substring(0,70)}..."`,
+        'mic', 7500
+      );
+      Voice.speak(`Bình luận xuất sắc từ bạn ${cmt.u}: ${cmt.c}`, voiceRate);
+      // Voice bar on video
+      document.getElementById('student-voice-bar')?.remove();
+      const bar = document.createElement('div');
+      bar.id = 'student-voice-bar';
+      bar.className = 'voice-bar';
+      bar.innerHTML = `
+        <div class="voice-wave">
+          <span style="height:5px"></span><span style="height:11px"></span>
+          <span style="height:16px"></span><span style="height:11px"></span>
+          <span style="height:5px"></span>
+        </div>
+        <span>Đang đọc: <strong>${cmt.u}</strong></span>`;
+      document.querySelector('.svid-wrap')?.appendChild(bar);
+      setTimeout(() => bar?.remove(), 7500);
+      // Switch to chat tab to show it
+      SC.switchPanel('chat');
+    } else if (cmt.q === 'good') {
+      _showStudentToast(
+        `<strong>${cmt.u}</strong>: "${cmt.c.substring(0,60)}..."`, 'star'
+      );
+    }
+  }
+
+  function _showElderToast(html, type, dur) {
+    const TT = {
+      ai:   { cls:'ai',   fa:'fas fa-robot',          lbl:'Trợ lý AI' },
+      q:    { cls:'q',    fa:'fas fa-question-circle', lbl:'Câu hỏi từ sinh viên' },
+      star: { cls:'star', fa:'fas fa-star',            lbl:'Phản hồi từ khán giả' },
+      mic:  { cls:'mic',  fa:'fas fa-microphone',      lbl:'🎙️ Đang đọc bình luận xuất sắc' },
+    };
+    const wrap = document.getElementById('elder-toast-wrap'); if (!wrap) return;
+    const t = TT[type]||TT.ai;
+    const el = document.createElement('div');
+    el.className = `tt-toast tt-fade${type==='mic'?' tt-voice':''}`;
+    el.style.setProperty('--ttl', `${(dur-400)/1000}s`);
+    el.innerHTML = `
+      <div class="tt-icon-wrap ${t.cls}"><i class="${t.fa}"></i></div>
+      <div><div class="tt-label">${t.lbl}</div><div class="tt-text">${html}</div></div>`;
+    wrap.appendChild(el);
+    setTimeout(() => el.remove(), dur+300);
+  }
+
+  function _showStudentToast(html, type, dur=4200) {
+    const ST = {
+      success:{ cls:'succ',   fa:'fas fa-check-circle', lbl:'Thành công' },
+      info:   { cls:'info',   fa:'fas fa-bell',         lbl:'Thông báo' },
+      mic:    { cls:'mic-ic', fa:'fas fa-microphone',   lbl:'🎙️ Đang đọc bình luận xuất sắc' },
+      star:   { cls:'star-ic',fa:'fas fa-star',         lbl:'Bình luận hay ✨' },
+    };
+    const t = ST[type]||ST.info;
+    const el = document.createElement('div');
+    el.className = `s-toast${type==='mic'?' voice-toast':''}`;
+    el.style.setProperty('--stl', `${(dur-380)/1000}s`);
+    el.innerHTML = `
+      <div class="s-toast-icon ${t.cls}"><i class="${t.fa}"></i></div>
+      <div><div class="s-toast-lbl">${t.lbl}</div><div class="s-toast-msg">${html}</div></div>`;
+    const stack = document.getElementById('student-toast-stack');
+    if (stack) stack.appendChild(el);
+    setTimeout(() => el.remove(), dur+300);
+  }
+
+  return { toggle, fireComment, elderToast, goElder, goElderLive, goStudentLive, setRate, reset };
+})();

@@ -342,6 +342,65 @@
 
   </div><!-- /screen-student -->
 
+  <!-- ════ DEMO CONTROL PANEL ════ -->
+  <button id="demo-fab" onclick="Demo.toggle()" title="Demo Controls">⚙️</button>
+
+  <div id="demo-panel">
+    <div class="dp-header">
+      <span class="dp-header-icon"><i class="fas fa-flask"></i></span>
+      <span class="dp-header-title">Demo Controls</span>
+      <span class="dp-badge">TEST</span>
+    </div>
+
+    <!-- Context label -->
+    <div class="dp-context-label" id="dp-ctx">Chọn vai để xem lệnh</div>
+
+    <!-- NAVIGATION SHORTCUTS -->
+    <div class="dp-section">
+      <div class="dp-section-label">⚡ Chuyển màn hình nhanh</div>
+      <button class="dp-btn skip" onclick="Demo.goElder()"><i class="fas fa-user-clock"></i> Vào màn Elder</button>
+      <button class="dp-btn skip" onclick="Demo.goElderLive()"><i class="fas fa-video"></i> Skip → Elder Live</button>
+      <button class="dp-btn skip" onclick="Demo.goStudentLive()"><i class="fas fa-graduation-cap"></i> Vào Student Live</button>
+    </div>
+
+    <div class="dp-divider"></div>
+
+    <!-- COMMENT TRIGGERS -->
+    <div class="dp-section">
+      <div class="dp-section-label">💬 Kích hoạt bình luận</div>
+      <button class="dp-btn normal" onclick="Demo.fireComment('normal')"><i class="fas fa-comment"></i> Bình luận thường</button>
+      <button class="dp-btn good" onclick="Demo.fireComment('good')"><i class="fas fa-star"></i> Bình luận hay (toast)</button>
+      <button class="dp-btn excellent" onclick="Demo.fireComment('excellent')"><i class="fas fa-microphone"></i> Xuất sắc + VOICE 🔊</button>
+    </div>
+
+    <div class="dp-divider"></div>
+
+    <!-- ELDER SPECIFIC -->
+    <div class="dp-section" id="dp-elder-section">
+      <div class="dp-section-label">🧓 Elder controls</div>
+      <button class="dp-btn normal" onclick="Demo.elderToast('ai')"><i class="fas fa-robot"></i> Toast AI</button>
+      <button class="dp-btn good" onclick="Demo.elderToast('q')"><i class="fas fa-question-circle"></i> Toast Câu hỏi</button>
+      <button class="dp-btn good" onclick="Demo.elderToast('star')"><i class="fas fa-star"></i> Toast Phản hồi</button>
+    </div>
+
+    <div class="dp-divider"></div>
+
+    <!-- SPEED -->
+    <div class="dp-speed-row">
+      <span class="dp-speed-label">Tốc độ voice:</span>
+      <div class="dp-speed-btns">
+        <button class="dp-speed-btn" onclick="Demo.setRate(0.7,this)">0.7×</button>
+        <button class="dp-speed-btn active" onclick="Demo.setRate(0.88,this)">0.9×</button>
+        <button class="dp-speed-btn" onclick="Demo.setRate(1.1,this)">1.1×</button>
+      </div>
+    </div>
+
+    <!-- RESET -->
+    <div class="dp-section">
+      <button class="dp-btn danger" onclick="Demo.reset()"><i class="fas fa-redo"></i> Reset về trang chủ</button>
+    </div>
+  </div>
+
 </div><!-- /app-frame -->
 
 <script src="app.js"></script>

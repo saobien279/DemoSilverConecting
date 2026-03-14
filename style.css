@@ -844,3 +844,147 @@ body{
   .elder-greet{font-size:28px}
   .btn-elder{font-size:18px;padding:18px}
 }
+
+/* ═══════════════════════════════════════════════════
+   DEMO CONTROL PANEL (Floating)
+═══════════════════════════════════════════════════ */
+#demo-fab {
+  position: fixed;
+  bottom: 22px;
+  right: 14px;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #7B68EE, #5D4FDB);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 4px 20px rgba(123,104,238,.55);
+  border: none;
+  transition: transform .25s, box-shadow .25s;
+}
+#demo-fab:hover { transform: scale(1.12); box-shadow: 0 6px 28px rgba(123,104,238,.7); }
+#demo-fab.open { transform: rotate(45deg); background: linear-gradient(135deg,#E74C3C,#C0392B); }
+
+#demo-panel {
+  position: fixed;
+  bottom: 82px;
+  right: 14px;
+  width: 248px;
+  background: rgba(15,15,22,.97);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(123,104,238,.35);
+  border-radius: 20px;
+  z-index: 9998;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,.55);
+  display: none;
+  flex-direction: column;
+  animation: fadeUp .25s ease;
+}
+#demo-panel.visible { display: flex; }
+
+.dp-header {
+  padding: 12px 16px 10px;
+  background: rgba(123,104,238,.18);
+  border-bottom: 1px solid rgba(123,104,238,.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dp-header-icon { font-size: 15px; color: #7B68EE; }
+.dp-header-title { font-family: 'Outfit',sans-serif; font-weight: 700; font-size: 13px; flex: 1; color: #fff; }
+.dp-badge {
+  background: #E74C3C;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: .5px;
+}
+
+.dp-section { padding: 10px 14px 6px; }
+.dp-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.35);
+  margin-bottom: 7px;
+}
+
+.dp-btn {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  transition: all .18s;
+  text-align: left;
+}
+.dp-btn i { width: 16px; text-align: center; flex-shrink: 0; }
+.dp-btn:last-child { margin-bottom: 0; }
+
+.dp-btn.normal  { background: rgba(255,255,255,.07); color: #ccc; }
+.dp-btn.normal:hover  { background: rgba(255,255,255,.13); color: #fff; }
+
+.dp-btn.good    { background: rgba(241,196,15,.12); color: #F1C40F; border: 1px solid rgba(241,196,15,.25); }
+.dp-btn.good:hover    { background: rgba(241,196,15,.22); }
+
+.dp-btn.excellent { background: rgba(123,104,238,.18); color: #9D8AFF; border: 1px solid rgba(123,104,238,.35); }
+.dp-btn.excellent:hover { background: rgba(123,104,238,.32); }
+
+.dp-btn.danger  { background: rgba(231,76,60,.14); color: #ff8a7a; border: 1px solid rgba(231,76,60,.3); }
+.dp-btn.danger:hover  { background: rgba(231,76,60,.28); }
+
+.dp-btn.success { background: rgba(46,204,113,.14); color: #5feba0; border: 1px solid rgba(46,204,113,.3); }
+.dp-btn.success:hover { background: rgba(46,204,113,.28); }
+
+.dp-btn.skip { background: rgba(255,154,60,.14); color: #FFB347; border: 1px solid rgba(255,154,60,.3); }
+.dp-btn.skip:hover { background: rgba(255,154,60,.28); }
+
+.dp-divider { height: 1px; background: rgba(255,255,255,.07); margin: 2px 14px 6px; }
+
+.dp-context-label {
+  padding: 6px 14px 4px;
+  font-size: 10px;
+  color: rgba(255,255,255,.25);
+  font-style: italic;
+}
+
+.dp-speed-row {
+  padding: 4px 14px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dp-speed-label { font-size: 11px; color: rgba(255,255,255,.5); white-space: nowrap; }
+.dp-speed-btns { display: flex; gap: 5px; }
+.dp-speed-btn {
+  padding: 4px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: transparent;
+  color: rgba(255,255,255,.5);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+}
+.dp-speed-btn.active, .dp-speed-btn:hover {
+  background: rgba(123,104,238,.35);
+  border-color: rgba(123,104,238,.6);
+  color: #fff;
+}
