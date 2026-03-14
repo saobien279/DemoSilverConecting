@@ -1,8 +1,10 @@
 /* ═══════════════════════════════════════════════════════
-   SILVER CONNECT — APP.JS  (Voice-fixed build)
-   • Voice reading: unlock on first interaction, guaranteed
-   • Excellent comments xuất hiện sớm (comment thứ 3, 7, 12...)
-   • TikTok toasts frosted glass chữ đen cho Elder
+   SILVER CONNECT — APP.JS
+   • MAX_CMT = 6 (elder comment stream)
+   • Student excellent comments → toast only, NO voice read
+   • Mic / Cam toggle for elder live
+   • TikTok-style right action counts for student
+   • Home button fix (location.reload)
 ═══════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════
@@ -18,7 +20,6 @@ const Voice = (() => {
 
   function unlock() {
     if (unlocked || !('speechSynthesis' in window)) return;
-    // Speak a zero-length utterance to unblock autoplay policy
     const u = new SpeechSynthesisUtterance('');
     u.volume = 0;
     window.speechSynthesis.speak(u);
@@ -37,13 +38,11 @@ const Voice = (() => {
     u.pitch  = 1.05;
     u.volume = 1;
 
-    // Try Vietnamese voice first, fallback to any
     const vi = voiceList.find(v => v.lang.startsWith('vi'))
              || voiceList.find(v => v.lang.startsWith('vi-'))
              || voiceList[0];
     if (vi) u.voice = vi;
 
-    // Chrome bug: cancel long pauses
     const resume = setInterval(() => {
       if (!window.speechSynthesis.speaking) { clearInterval(resume); return; }
       window.speechSynthesis.pause();
@@ -58,7 +57,6 @@ const Voice = (() => {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
   }
 
-  // Auto-load voices once available
   if ('speechSynthesis' in window) {
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -70,9 +68,6 @@ const Voice = (() => {
 /* ══════════════════════════════════════
    ELDER DATA
 ══════════════════════════════════════ */
-
-// Comments cho màn hình Elder (TikTok overlay trên video)
-// excellent → đọc voice + voice-bar
 const ELDER_COMMENTS = [
   { u: 'Ngọc Ánh',   c: 'Chào bác ạ! Em rất xúc động ❤️',                                                                                                              q: 'normal',    col: '#FF9A3C' },
   { u: 'Tuấn Kiệt',  c: 'Hay quá bác ơi! 👏',                                                                                                                           q: 'normal',    col: '#4facfe' },
@@ -96,7 +91,6 @@ const ELDER_COMMENTS = [
   { u: 'Minh Khôi',  c: 'Cảm ơn Silver Connect đã kết nối thế hệ như thế này 💜',                                                                                      q: 'good',      col: '#FF9A3C' },
 ];
 
-// Toast notifications trong luồng Elder (không phải comment stream)
 const ELDER_TOASTS = [
   { msg: 'Cháu chào bác Minh! Còn <strong>8 phút</strong> nữa là gặp các bạn sinh viên rồi. Chúc bác buổi chia sẻ thật ý nghĩa!', type: 'ai' },
   { msg: '<strong>Bạn Ngọc Ánh</strong> hỏi: Bác ơi, điều gì giúp bác vượt qua giai đoạn khó khăn nhất trong cuộc đời ạ?', type: 'q' },
@@ -112,32 +106,25 @@ const ELDER_TOASTS = [
 /* ══════════════════════════════════════
    STUDENT DATA
 ══════════════════════════════════════ */
-
-// Comment pool cho Student chat
-// Excellent → đọc voice + toast + voice-bar + highlight trong chat
 const STUDENT_COMMENTS = [
   { u: 'Ngọc Ánh',   c: '❤️❤️ Chào bác ạ!',                                                                                                                            q: 'normal',    col: '#FF9A3C' },
   { u: 'Tuấn Kiệt',  c: 'Bác ơi, bí quyết hôn nhân 40 năm là gì ạ?',                                                                                                  q: 'normal',    col: '#4facfe' },
-  // ★ EXCELLENT #1 — xuất hiện sớm (~15s sau khi vào live)
   { u: 'Bảo Châu',   c: 'Thưa bác, em đang trong một mối quan hệ rất khó khăn. Câu chuyện của bác cho em thấy rằng kiên nhẫn và yêu thương thật sự có thể vượt qua tất cả. Em cảm ơn bác từ tận đáy lòng!', q: 'excellent', col: '#7B68EE' },
   { u: 'Khánh Linh', c: 'Em nghĩ đến bố mẹ em 🥺',                                                                                                                      q: 'normal',    col: '#a18cd1' },
   { u: 'Minh Châu',  c: 'Câu chuyện của bác khiến em khóc mà không biết tại sao 💕',                                                                                   q: 'good',      col: '#f093fb' },
   { u: 'Đức Anh',    c: 'Câu nói "không ngủ khi còn giận nhau" hay quá!',                                                                                              q: 'good',      col: '#F1C40F' },
   { u: 'Hồng Nhung', c: 'Em chia sẻ link này cho bạn trai em luôn 😂',                                                                                                  q: 'normal',    col: '#FF6B8B' },
-  // ★ EXCELLENT #2 — ~55s
   { u: 'Gia Bảo',    c: 'Mình năm 22 tuổi, chưa biết tình yêu là gì. Nghe bác nói mình hiểu rằng tình yêu đích thực cần thời gian và nỗ lực chứ không phải cảm xúc bồng bột nhất thời. Cảm ơn bác!', q: 'excellent', col: '#2ECC71' },
   { u: 'Thu Hà',     c: 'Bác ơi em khóc rồi ạ 😭',                                                                                                                      q: 'normal',    col: '#a18cd1' },
   { u: 'Tuấn Anh',   c: '💯 Hay hơn bất kỳ cuốn sách nào!',                                                                                                             q: 'good',      col: '#4facfe' },
   { u: 'Ngọc Bích',  c: '"Tôn trọng sự khác biệt" — em sẽ nhớ câu này mãi!',                                                                                          q: 'good',      col: '#f093fb' },
   { u: 'Minh Khôi',  c: '❤️🌸❤️',                                                                                                                                         q: 'normal',    col: '#FF9A3C' },
   { u: 'Yến Nhi',    c: 'Bác và bác gái quen nhau như thế nào ạ?',                                                                                                      q: 'normal',    col: '#FFD700' },
-  // ★ EXCELLENT #3 — ~1:45
   { u: 'Hải Đăng',   c: 'Thưa bác, em vừa trải qua chia tay rất đau lòng. Nghe bác kể về 40 năm yêu nhau, em nhận ra mình còn trẻ lắm và tình yêu thật sự cần xây dựng chứ không chỉ cảm xúc nhất thời. Bác đã giúp em đứng dậy!', q: 'excellent', col: '#E74C3C' },
   { u: 'Lan Anh',    c: 'Livestream hay nhất em từng xem! 🔥',                                                                                                          q: 'normal',    col: '#FF6B8B' },
   { u: 'Minh Châu',  c: '312 người đang xem cùng em — bác không đơn độc!',                                                                                             q: 'good',      col: '#FF9A3C' },
   { u: 'Văn Tùng',   c: '👏 Cảm ơn bác!',                                                                                                                                q: 'normal',    col: '#4facfe' },
   { u: 'Phương Linh',c: 'Em lưu Smart Note câu này để đọc lại khi buồn!',                                                                                              q: 'good',      col: '#a18cd1' },
-  // ★ EXCELLENT #4 — ~2:30
   { u: 'Kim Ngân',   c: 'Mình thấy thế hệ mình đang thiếu đi sự kiên nhẫn trong tình yêu. Nghe bác nói, mình hiểu rằng yêu thật sự là một hành trình dài cần cả hai cùng xây dựng mỗi ngày.', q: 'excellent', col: '#f093fb' },
   { u: 'Đức Anh',    c: 'Bác kể tiếp đi bác ơi!',                                                                                                                      q: 'normal',    col: '#F1C40F' },
   { u: 'Hồng Nhung', c: 'Nước mắt em cứ rơi từ nãy đến giờ 😭💕',                                                                                                       q: 'normal',    col: '#FF6B8B' },
@@ -146,7 +133,6 @@ const STUDENT_COMMENTS = [
   { u: 'Hải Đăng',   c: 'Câu chuyện này là thứ gen Z cần nghe nhất!',                                                                                                  q: 'good',      col: '#E74C3C' },
   { u: 'Yến Nhi',    c: 'Cảm ơn Silver Connect đã kết nối thế hệ ❤️',                                                                                                  q: 'good',      col: '#FFD700' },
   { u: 'Bảo Châu',   c: 'Bác Minh ơi, bác là tấm gương cho em!',                                                                                                       q: 'normal',    col: '#7B68EE' },
-  // ★ EXCELLENT #5 — ~3:30
   { u: 'Quang Huy',  c: 'Thưa bác, em là sinh viên năm 3 đang rất mất phương hướng. Hôm nay nghe bác kể về cuộc đời, em thấy rõ rằng mỗi khó khăn đều có ý nghĩa và tương lai phía trước vẫn còn rất nhiều điều tươi đẹp. Cảm ơn bác rất nhiều!', q: 'excellent', col: '#43e97b' },
   { u: 'Phương Linh',c: 'Phải share bài này cho cả nhóm bạn thân!',                                                                                                    q: 'normal',    col: '#a18cd1' },
   { u: 'Lan Anh',    c: '🌸🌸 Trân trọng bác lắm ạ!',                                                                                                                   q: 'normal',    col: '#FF6B8B' },
@@ -188,17 +174,17 @@ const NOTE_POOL = [
 ══════════════════════════════════════ */
 const SC = (() => {
 
-  /* ─── SHARED STATE ─── */
   let cameraStream = null;
 
-  /* ─── ELDER STATE ─── */
+  /* Elder state */
   const E = {
     vc: 52, hearts: 312, commentCount: 48,
     sessTimer: null, vcTimer: null, cmtTimer: null, toastTimer: null,
     cmtIdx: 0, toastIdx: 0, sessionSec: 0,
+    micOn: true, camOn: true,
   };
 
-  /* ─── STUDENT STATE ─── */
+  /* Student state */
   const S = {
     notes: JSON.parse(JSON.stringify(STUDENT_NOTES_INIT)),
     chat:  JSON.parse(JSON.stringify(STUDENT_CHAT_INIT)),
@@ -211,9 +197,7 @@ const SC = (() => {
     liveInited: false,
   };
 
-  /* ══════════════════════════════════════
-     UTILS
-  ══════════════════════════════════════ */
+  /* ── Utils ── */
   const gi  = id  => document.getElementById(id);
   const qs  = sel => document.querySelector(sel);
   const now = ()  => new Date().toLocaleTimeString('vi', { hour: '2-digit', minute: '2-digit' });
@@ -242,7 +226,6 @@ const SC = (() => {
 
   /* ══════════════════════════════════════
      TIKTOK TOAST (Elder)
-     — frosted glass white, chữ đen, slide từ trên
   ══════════════════════════════════════ */
   const TT_ICON = {
     ai:   { cls:'ai',   fa:'fas fa-robot',             lbl:'Trợ lý AI'                    },
@@ -280,18 +263,20 @@ const SC = (() => {
 
   /* ══════════════════════════════════════
      ELDER COMMENT STREAM (TikTok overlay)
+     Max 6 visible — oldest fades out when 7th arrives
   ══════════════════════════════════════ */
-  const MAX_CMT = 4;
+  const MAX_CMT = 6;
 
   function addElderComment(cmt) {
     const stream = gi('elive-comment-stream');
     if (!stream) return;
 
-    // Remove oldest if overflow
+    // Remove oldest if already at max
     const existing = stream.querySelectorAll('.elive-cmt');
     if (existing.length >= MAX_CMT) {
-      existing[0].style.animation = 'cmtFadeOut .3s ease forwards';
-      setTimeout(() => existing[0]?.remove(), 300);
+      const oldest = existing[0];
+      oldest.classList.add('fading');
+      setTimeout(() => oldest?.remove(), 420);
     }
 
     const el = document.createElement('div');
@@ -307,27 +292,25 @@ const SC = (() => {
     const cc = gi('elder-comments');
     if (cc) cc.textContent = E.commentCount;
 
-    // Hearts bump
     if (Math.random() > 0.55) {
       E.hearts += Math.floor(Math.random()*4)+1;
       const hh = gi('elder-hearts');
       if (hh) hh.textContent = E.hearts;
     }
 
+    // Auto-fade after 9s
     setTimeout(() => {
-      el.style.animation = 'cmtFadeOut .4s ease forwards';
-      setTimeout(() => el?.remove(), 400);
-    }, 7000);
+      el.classList.add('fading');
+      setTimeout(() => el?.remove(), 420);
+    }, 9000);
 
     if (cmt.q === 'excellent') elderExcellent(cmt);
   }
 
   function elderExcellent(cmt) {
-    // Toast + voice
     showElderToast(`<strong>${cmt.u}</strong>: "${cmt.c.substring(0,60)}${cmt.c.length>60?'...':''}"`, 'mic', 7500);
     Voice.speak(`Bình luận xuất sắc từ bạn ${cmt.u}: ${cmt.c}`);
 
-    // Voice bar overlay on video
     const liveScreen = gi('elder-live');
     gi('elder-voice-bar')?.remove();
     const bar = document.createElement('div');
@@ -346,11 +329,63 @@ const SC = (() => {
 
   function schedElderComments() {
     if (E.cmtIdx >= ELDER_COMMENTS.length) return;
-    const delay = 5000 + Math.random()*8000; // 5–13s
+    const delay = 5000 + Math.random()*8000;
     E.cmtTimer = setTimeout(() => {
       addElderComment(ELDER_COMMENTS[E.cmtIdx++]);
       schedElderComments();
     }, delay);
+  }
+
+  /* ══════════════════════════════════════
+     ELDER MIC / CAM TOGGLE
+  ══════════════════════════════════════ */
+  function toggleElderMic() {
+    E.micOn = !E.micOn;
+    const btn  = gi('elder-mic-btn');
+    const icon = gi('elder-mic-icon');
+    if (!btn || !icon) return;
+    if (E.micOn) {
+      btn.classList.remove('muted');
+      btn.classList.add('active');
+      icon.className = 'fas fa-microphone';
+      showElderToast('Micro đã được bật 🎙️', 'ai', 3000);
+    } else {
+      btn.classList.add('muted');
+      btn.classList.remove('active');
+      icon.className = 'fas fa-microphone-slash';
+      showElderToast('Micro đã tắt 🔇', 'ai', 3000);
+    }
+    // Mute/unmute actual video tracks if available
+    if (cameraStream) {
+      cameraStream.getAudioTracks().forEach(t => t.enabled = E.micOn);
+    }
+  }
+
+  function toggleElderCam() {
+    E.camOn = !E.camOn;
+    const btn  = gi('elder-cam-btn');
+    const icon = gi('elder-cam-icon');
+    const vid  = gi('elder-live-cam');
+    const ph   = gi('elder-live-ph');
+    if (!btn || !icon) return;
+    if (E.camOn) {
+      btn.classList.remove('muted');
+      btn.classList.add('active');
+      icon.className = 'fas fa-video';
+      if (vid) vid.style.display = cameraStream ? 'block' : 'none';
+      if (ph && cameraStream) ph.style.display = 'none';
+      showElderToast('Camera đã được bật 📹', 'ai', 3000);
+    } else {
+      btn.classList.add('muted');
+      btn.classList.remove('active');
+      icon.className = 'fas fa-video-slash';
+      if (vid) vid.style.display = 'none';
+      if (ph) ph.style.display = 'flex';
+      showElderToast('Camera đã tắt 🚫📹', 'ai', 3000);
+    }
+    if (cameraStream) {
+      cameraStream.getVideoTracks().forEach(t => t.enabled = E.camOn);
+    }
   }
 
   /* ══════════════════════════════════════
@@ -380,11 +415,13 @@ const SC = (() => {
   }
 
   /* ══════════════════════════════════════
-     STUDENT COMMENT STREAM → CHAT + VOICE
+     STUDENT COMMENT STREAM — TikTok overlay
+     (no chat panel, no voice)
   ══════════════════════════════════════ */
+  const STUDENT_MAX_CMT = 6;
+
   function schedStudentComments() {
     if (S.cmtIdx >= STUDENT_COMMENTS.length) return;
-    // Delay per comment: 4-11s → 30 comments ≈ 3-5 min
     const delay = 4000 + Math.random()*7000;
     S.cmtTimer = setTimeout(() => {
       const cmt = STUDENT_COMMENTS[S.cmtIdx++];
@@ -394,54 +431,52 @@ const SC = (() => {
   }
 
   function addStudentComment(cmt) {
-    S.chat.push({ type:'user', u:cmt.u, txt:cmt.c, time:now(), col:cmt.col, q:cmt.q });
-    renderChat(false); // don't re-scroll on normal
+    const stream = gi('student-cmt-stream');
+    if (stream) {
+      // Hard cap: remove ALL excess before adding new one
+      // Each comment ~32-38px tall + 4px gap → 5 fit in 190px
+      const MAX_VISIBLE = 5;
+      const existing = stream.querySelectorAll('.elive-cmt:not(.fading)');
+      if (existing.length >= MAX_VISIBLE) {
+        // Fade out oldest ones until we're under the cap
+        for (let i = 0; i <= existing.length - MAX_VISIBLE; i++) {
+          existing[i].classList.add('fading');
+          const el = existing[i];
+          setTimeout(() => el?.remove(), 420);
+        }
+      }
 
-    const cb = gi('chat-badge');
-    if (cb) cb.textContent = parseInt(cb.textContent||0)+1;
+      const el = document.createElement('div');
+      el.className = `elive-cmt${cmt.q==='excellent'?' excellent':''}`;
+      el.innerHTML = `
+        <div class="elive-cmt-inner">
+          <span class="elive-name-badge" style="background:${cmt.col}">${cmt.u}</span>
+          <span class="elive-cmt-text">${cmt.c}</span>
+        </div>`;
+      stream.appendChild(el);
+
+      // Auto-remove after 8s
+      setTimeout(() => {
+        el.classList.add('fading');
+        setTimeout(() => el?.remove(), 420);
+      }, 8000);
+    }
 
     if (cmt.q === 'excellent') {
-      studentExcellent(cmt);
+      showStudentToast(
+        `<strong>${cmt.u}</strong>: "${cmt.c.substring(0,70)}${cmt.c.length>70?'...':''}"`,
+        'star', 6000
+      );
     } else if (cmt.q === 'good') {
       showStudentToast(`<strong>${cmt.u}</strong>: "${cmt.c.substring(0,60)}${cmt.c.length>60?'...':''}"`, 'star');
     }
-  }
-
-  function studentExcellent(cmt) {
-    // 1. Toast (frosted glass, chữ đen)
-    showStudentToast(
-      `<strong>${cmt.u}</strong>: "${cmt.c.substring(0,70)}${cmt.c.length>70?'...':''}"`,
-      'mic', 7500
-    );
-
-    // 2. Voice read
-    Voice.speak(`Bình luận xuất sắc từ bạn ${cmt.u}: ${cmt.c}`);
-
-    // 3. Voice bar on video
-    const svid = qs('.svid-wrap');
-    gi('student-voice-bar')?.remove();
-    const bar = document.createElement('div');
-    bar.id = 'student-voice-bar';
-    bar.className = 'voice-bar';
-    bar.innerHTML = `
-      <div class="voice-wave">
-        <span style="height:5px"></span><span style="height:11px"></span>
-        <span style="height:16px"></span><span style="height:11px"></span>
-        <span style="height:5px"></span>
-      </div>
-      <span>Đang đọc: <strong>${cmt.u}</strong></span>`;
-    svid?.appendChild(bar);
-    setTimeout(() => bar?.remove(), 7500);
-
-    // 4. Scroll chat to show the excellent message
-    renderChat(true);
   }
 
   /* ══════════════════════════════════════
      ELDER FLOW
   ══════════════════════════════════════ */
   function startElder() {
-    Voice.unlock(); // unlock on first user gesture
+    Voice.unlock();
     hide('screen-landing');
     show('screen-elder');
     setTimeout(() => {
@@ -476,7 +511,6 @@ const SC = (() => {
       stopCamera();
       show('elder-live');
       startCamera('elder-live-cam', 'elder-live-ph');
-      // Start session
       E.sessTimer = setInterval(() => E.sessionSec++, 1000);
       E.vcTimer   = setInterval(() => {
         E.vc = Math.max(42, E.vc + (Math.random()>.5?1:-1));
@@ -536,9 +570,9 @@ const SC = (() => {
           <div class="stat-row"><span class="sr-label">Smart Notes đã lưu</span><span class="sr-val">38</span></div>
         </div>
         <div class="confirm-msg">Câu chuyện của bác đã chạm đến trái tim <strong style="color:#FFD700">${E.vc} bạn trẻ</strong>!</div>
-        <a href="index.html" class="btn-end-confirm" style="width:80%;text-decoration:none;text-align:center;padding:16px;display:block;margin-top:8px;border-radius:22px">
+        <button class="btn-home-end" onclick="location.reload()">
           <i class="fas fa-home"></i> VỀ TRANG CHỦ
-        </a>
+        </button>
       </div>`;
   }
 
@@ -546,7 +580,7 @@ const SC = (() => {
      STUDENT FLOW
   ══════════════════════════════════════ */
   function startStudent() {
-    Voice.unlock(); // unlock on first user gesture
+    Voice.unlock();
     hide('screen-landing');
     show('screen-student');
     renderNotes(); renderChat(false); renderNotebook();
@@ -590,29 +624,41 @@ const SC = (() => {
     if (S.liveInited) return;
     S.liveInited = true;
     Voice.unlock();
-    renderNotes(); renderChat(true);
+    renderNotes();
     startCamera('student-vid','student-vid-ph');
-    // Timer
     let sec=0;
     S.liveTimer = setInterval(() => {
       const el = gi('student-dur'); if(el) el.textContent = fmt(++sec);
     }, 1000);
-    // VC fluctuation
     let vc=63;
     S.vcTimer = setInterval(() => {
       vc = Math.max(50, vc+(Math.random()>.5?1:-1));
       const el = gi('student-vc'); if(el) el.textContent=vc;
     }, 6000);
-    // Comments — first excellent fires after ~15s
     setTimeout(() => schedStudentComments(), 3000);
     showStudentToast('Đã kết nối với buổi live của bác Minh! 🎉', 'success');
+    // Setup enter key on new input
+    gi('chat-input')?.addEventListener('keypress', e => { if(e.key==='Enter') sendMsg(); });
+  }
+
+  function toggleNotesDrawer() {
+    const drawer = gi('snotes-drawer');
+    const fab    = gi('notes-fab');
+    if (!drawer) return;
+    const isOpen = drawer.classList.toggle('open');
+    if (fab) fab.style.opacity = isOpen ? '0' : '1';
+    if (isOpen) renderNotes();
   }
 
   function react(type) {
     Voice.unlock();
     S.rxn[type]++;
-    const el = gi('rxn-counts');
-    if (el) el.textContent = `${S.rxn.heart} ❤️ · ${S.rxn.clap} 👏 · ${S.rxn.flower} 🌸`;
+    const heartEl  = gi('heart-count');
+    const clapEl   = gi('clap-count');
+    const flowerEl = gi('flower-count');
+    if (heartEl)  heartEl.textContent  = S.rxn.heart;
+    if (clapEl)   clapEl.textContent   = S.rxn.clap;
+    if (flowerEl) flowerEl.textContent = S.rxn.flower;
     const e = {'heart':'❤️','flower':'🌸','clap':'👏'};
     showStudentToast(`Đã gửi ${e[type]} đến bác Minh!`, 'success');
   }
@@ -623,35 +669,95 @@ const SC = (() => {
     const c = NOTE_POOL[Math.floor(Math.random()*NOTE_POOL.length)];
     S.notes.unshift({ id:S.noteId, time:now(), txt:c.txt, tags:c.tags, pinned:false, ts:Date.now() });
     S.nb.unshift({ id:S.nb.length+1, title:`Smart Note #${S.noteId}`, date:new Date().toLocaleDateString('vi'), preview:c.txt.substring(0,85)+'...', tags:c.tags });
+
+    // Pop animation on button
+    const btn = gi('snote-btn');
+    if (btn) {
+      btn.classList.remove('popping');
+      void btn.offsetWidth; // reflow
+      btn.classList.add('popping');
+      // ripple
+      const ripple = document.createElement('div');
+      ripple.className = 'snote-ripple';
+      btn.appendChild(ripple);
+      setTimeout(() => ripple?.remove(), 550);
+      // saved label
+      const label = document.createElement('div');
+      label.className = 'snote-saved-label';
+      label.textContent = '⚡ Đã lưu!';
+      btn.appendChild(label);
+      setTimeout(() => label?.remove(), 950);
+    }
+
     renderNotes(); renderNotebook();
-    showStudentToast('⚡ Đã lưu Clip 30 giây + Transcript tự động!', 'success');
+
+    // Update badges
+    const nb  = gi('notes-badge');
+    const nfb = gi('notes-fab-badge');
+    const pnc = gi('prof-notes-count');
+    if (nb)  nb.textContent  = S.notes.length;
+    if (nfb) nfb.textContent = S.notes.length;
+    if (pnc) pnc.textContent = S.notes.length;
+
+    showStudentToast('⚡ Smart Note đã lưu tự động!', 'success', 2800);
   }
 
   function sendMsg() {
     Voice.unlock();
     const inp = gi('chat-input');
     const v = inp?.value.trim(); if (!v) return;
-    S.chat.push({ type:'user', u:'Tôi', txt:v, time:now(), col:'#7B68EE', q:'normal' });
     inp.value='';
-    renderChat(true);
+    // Show as floating comment from user
+    const stream = gi('student-cmt-stream');
+    if (stream) {
+      const existing = stream.querySelectorAll('.elive-cmt:not(.fading)');
+      if (existing.length >= 5) {
+        existing[0].classList.add('fading');
+        setTimeout(() => existing[0]?.remove(), 420);
+      }
+      const el = document.createElement('div');
+      el.className = 'elive-cmt';
+      el.innerHTML = `
+        <div class="elive-cmt-inner">
+          <span class="elive-name-badge" style="background:#7B68EE">Bạn</span>
+          <span class="elive-cmt-text">${v}</span>
+        </div>`;
+      stream.appendChild(el);
+      const existingAll = stream.querySelectorAll('.elive-cmt');
+      if (existingAll.length > 5) {
+        existingAll[0].classList.add('fading');
+        setTimeout(() => existingAll[0]?.remove(), 420);
+      }
+      setTimeout(() => {
+        el.classList.add('fading');
+        setTimeout(() => el?.remove(), 420);
+      }, 7000);
+    }
     showStudentToast('AI đã chuyển câu hỏi tới tai nghe bác Minh! 🎧', 'info');
     setTimeout(() => {
       const rs=['Câu hỏi hay quá! Để bác chia sẻ về điều đó nhé...','Cảm ơn bạn! Bác sẽ trả lời ngay.','Đây là điều bác cũng từng trải qua...'];
-      S.chat.push({ type:'user', u:'Bác Minh', txt:rs[Math.floor(Math.random()*rs.length)], time:now(), col:'#FF9A3C', q:'normal' });
-      renderChat(true);
+      const reply = rs[Math.floor(Math.random()*rs.length)];
+      // Show reply as floating comment from bác Minh
+      const s2 = gi('student-cmt-stream');
+      if (s2) {
+        const el2 = document.createElement('div');
+        el2.className = 'elive-cmt excellent';
+        el2.innerHTML = `
+          <div class="elive-cmt-inner">
+            <span class="elive-name-badge" style="background:#FF9A3C">Bác Minh</span>
+            <span class="elive-cmt-text">${reply}</span>
+          </div>`;
+        s2.appendChild(el2);
+        setTimeout(() => {
+          el2.classList.add('fading');
+          setTimeout(() => el2?.remove(), 420);
+        }, 9000);
+      }
     }, 2500);
   }
 
-  function switchPanel(panel) {
-    S.activePanel = panel;
-    const np = gi('panel-notes');
-    const cp = gi('panel-chat');
-    if (np) { np.style.display = panel==='notes'?'block':'none'; np.className=`panel-body${panel==='notes'?' notes-active':''}`; }
-    if (cp) { cp.style.display = panel==='chat'?'flex':'none'; cp.style.flexDirection='column'; cp.className=`panel-body${panel==='chat'?' chat-active':''}`; }
-    gi('ptab-notes')?.classList.toggle('active', panel==='notes');
-    gi('ptab-chat')?.classList.toggle('active', panel==='chat');
-    if (panel==='chat') { const cs=gi('chat-scroll'); if(cs) setTimeout(()=>cs.scrollTop=cs.scrollHeight,80); }
-  }
+  function switchPanel(panel) { /* kept for compatibility, no-op in new live */ }
+  function renderChat() { /* kept for compatibility, no-op in new live */ }
 
   /* ─── RENDER NOTES ─── */
   function renderNotes() {
@@ -667,11 +773,12 @@ const SC = (() => {
           <div class="note-tags">${n.tags.map(t=>`<span class="ntag">${t}</span>`).join('')}</div>
         </div>`).join('');
     }
-    const nb=gi('notes-badge'), pnc=gi('prof-notes-count');
-    if(nb) nb.textContent=S.notes.length;
+    el.className='panel-body notes-active';
+    el.style.display='block';
+    const nb=gi('notes-badge'), nfb=gi('notes-fab-badge'), pnc=gi('prof-notes-count');
+    if(nb)  nb.textContent=S.notes.length;
+    if(nfb) nfb.textContent=S.notes.length;
     if(pnc) pnc.textContent=S.notes.length;
-    el.className=`panel-body${S.activePanel==='notes'?' notes-active':''}`;
-    el.style.display=S.activePanel==='notes'?'block':'none';
   }
 
   /* ─── RENDER CHAT ─── */
@@ -712,8 +819,9 @@ const SC = (() => {
   /* ── PUBLIC ── */
   return {
     startElder, elderStep, elderConfirmEnd, elderContinue, elderEnd,
+    toggleElderMic, toggleElderCam,
     startStudent, onNotifClick, switchTab, bookSession,
-    react, saveNote, sendMsg, switchPanel, initLive,
+    react, saveNote, sendMsg, switchPanel, initLive, toggleNotesDrawer,
   };
 })();
 
@@ -721,28 +829,23 @@ const SC = (() => {
    BOOT
 ══════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  // Pre-load voices
   if ('speechSynthesis' in window) {
     window.speechSynthesis.getVoices();
     window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
   }
-  // Show home view
   const vh = document.getElementById('view-home');
   if (vh) { vh.style.display='flex'; vh.style.flexDirection='column'; }
 });
 
 /* ══════════════════════════════════════════════════════
    DEMO CONTROLLER
-   Floating panel for presenters — trigger on demand
 ══════════════════════════════════════════════════════ */
 const Demo = (() => {
 
   let panelOpen = false;
   let voiceRate  = 0.88;
-  // Track which screen we're on
-  let ctx = 'landing'; // 'landing' | 'elder-welcome' | 'elder-mirror' | 'elder-live' | 'student-home' | 'student-live'
+  let ctx = 'landing';
 
-  /* Excellent comment samples — hand-picked, always impactful */
   const DEMO_EXCELLENT_ELDER = [
     { u: 'Hải Đăng',    c: 'Thưa bác, em vừa trải qua thất bại lớn và rất nản lòng. Nghe câu chuyện của bác, em hiểu rằng thất bại chỉ là bước đệm. Cảm ơn bác từ tận đáy lòng!', col: '#E74C3C' },
     { u: 'Phương Linh', c: 'Thưa bác, con đường bác đã đi qua đã dạy cho em rằng kiên trì và yêu thương là hai thứ không bao giờ lỗi thời. Em sẽ nhớ buổi hôm nay mãi mãi!',       col: '#9D8AFF' },
@@ -788,7 +891,6 @@ const Demo = (() => {
     el.textContent = labels[ctx] || '📍 Đang ở: ' + ctx;
   }
 
-  /* ── Toggle panel ── */
   function toggle() {
     panelOpen = !panelOpen;
     const fab   = document.getElementById('demo-fab');
@@ -798,7 +900,6 @@ const Demo = (() => {
     updateCtxLabel();
   }
 
-  /* ── Detect current context ── */
   function detectCtx() {
     const isElder   = !document.getElementById('screen-elder')?.classList.contains('hidden');
     const isStudent = !document.getElementById('screen-student')?.classList.contains('hidden');
@@ -816,7 +917,6 @@ const Demo = (() => {
     updateCtxLabel();
   }
 
-  /* ── Navigation shortcuts ── */
   function goElder() {
     detectCtx();
     if (ctx === 'landing') SC.startElder();
@@ -851,13 +951,11 @@ const Demo = (() => {
     _close();
   }
 
-  /* ── Fire comment on demand ── */
   function fireComment(quality) {
     detectCtx();
     Voice.unlock();
 
     if (ctx === 'elder-live') {
-      // Fire comment on elder video overlay
       let cmt;
       if (quality === 'excellent') {
         cmt = { ...DEMO_EXCELLENT_ELDER[excellentElderIdx % DEMO_EXCELLENT_ELDER.length], q: 'excellent' };
@@ -870,9 +968,7 @@ const Demo = (() => {
         normalIdx++;
       }
       _addElderComment(cmt);
-
     } else {
-      // Fire comment to student chat
       let cmt;
       if (quality === 'excellent') {
         cmt = { ...DEMO_EXCELLENT_STUDENT[excellentStudentIdx % DEMO_EXCELLENT_STUDENT.length], q: 'excellent' };
@@ -888,7 +984,6 @@ const Demo = (() => {
     }
   }
 
-  /* ── Elder toast triggers ── */
   const TOAST_POOL = {
     ai:   ['Có <strong>45 người</strong> mới vừa tham gia buổi live của bác!',
            '90 bình luận trong 5 phút — buổi chia sẻ đang rất <strong>hot</strong> bác ơi! 🔥'],
@@ -909,14 +1004,12 @@ const Demo = (() => {
     _close();
   }
 
-  /* ── Voice rate ── */
   function setRate(r, btn) {
     voiceRate = r;
     document.querySelectorAll('.dp-speed-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
   }
 
-  /* ── Reset ── */
   function reset() { location.reload(); }
 
   function _close() {
@@ -926,18 +1019,16 @@ const Demo = (() => {
     document.getElementById('demo-panel')?.classList.remove('visible');
   }
 
-  /* ═══════════════════════════════
-     Internal helpers (reach into SC internals via shared data)
-  ═══════════════════════════════ */
+  /* ── Internal helpers ── */
   function _addElderComment(cmt) {
     const stream = document.getElementById('elive-comment-stream');
     if (!stream) { console.warn('Elder live screen not open'); return; }
 
-    // Remove oldest if overflow
     const existing = stream.querySelectorAll('.elive-cmt');
-    if (existing.length >= 4) {
-      existing[0].style.animation = 'cmtFadeOut .3s ease forwards';
-      setTimeout(() => existing[0]?.remove(), 300);
+    if (existing.length >= 6) {
+      const oldest = existing[0];
+      oldest.classList.add('fading');
+      setTimeout(() => oldest?.remove(), 420);
     }
 
     const el = document.createElement('div');
@@ -949,16 +1040,15 @@ const Demo = (() => {
       </div>`;
     stream.appendChild(el);
 
-    // Update counter
     const cc = document.getElementById('elder-comments');
     if (cc) cc.textContent = parseInt(cc.textContent||0)+1;
     const hh = document.getElementById('elder-hearts');
     if (hh) hh.textContent = parseInt(hh.textContent||0) + Math.floor(Math.random()*4)+1;
 
     setTimeout(() => {
-      el.style.animation = 'cmtFadeOut .4s ease forwards';
-      setTimeout(() => el?.remove(), 400);
-    }, 7000);
+      el.classList.add('fading');
+      setTimeout(() => el?.remove(), 420);
+    }, 9000);
 
     if (cmt.q === 'excellent') {
       _showElderToast(
@@ -966,7 +1056,6 @@ const Demo = (() => {
         'mic', 7500
       );
       Voice.speak(`Bình luận xuất sắc từ bạn ${cmt.u}: ${cmt.c}`, voiceRate);
-      // Voice bar
       document.getElementById('elder-voice-bar')?.remove();
       const bar = document.createElement('div');
       bar.id = 'elder-voice-bar';
@@ -984,64 +1073,43 @@ const Demo = (() => {
   }
 
   function _addStudentComment(cmt) {
-    const now = () => new Date().toLocaleTimeString('vi',{hour:'2-digit',minute:'2-digit'});
-    // Find chat-msgs element
-    const msgs = document.getElementById('chat-msgs');
-    if (!msgs) {
-      // Student might be on home — switch to live first
+    // Switch to live if not there
+    const liveView = document.getElementById('view-live');
+    if (!liveView || liveView.classList.contains('hidden') || liveView.style.display === 'none') {
       SC.switchTab('live');
       setTimeout(() => _addStudentComment(cmt), 800);
       return;
     }
 
-    // Create message element directly
-    const exc = cmt.q === 'excellent' ? ' excellent' : '';
-    const div = document.createElement('div');
-    div.className = 'user-msg';
-    div.innerHTML = `
-      <div class="msg-hdr">
-        <div class="msg-av" style="background:${cmt.col}">${cmt.u.charAt(0)}</div>
-        <div class="msg-uname">${cmt.u}</div>
-        <div class="msg-time">${now()}</div>
-      </div>
-      <div class="msg-bubble${exc}">${cmt.c}</div>`;
-    msgs.appendChild(div);
+    const stream = document.getElementById('student-cmt-stream');
+    if (!stream) return;
 
-    // Scroll
-    const cs = document.getElementById('chat-scroll');
-    if (cs) cs.scrollTop = cs.scrollHeight;
+    const existing = stream.querySelectorAll('.elive-cmt:not(.fading)');
+    if (existing.length >= 5) {
+      for (let i = 0; i <= existing.length - 5; i++) {
+        existing[i].classList.add('fading');
+        const old = existing[i];
+        setTimeout(() => old?.remove(), 420);
+      }
+    }
 
-    // Update badge
-    const cb = document.getElementById('chat-badge');
-    if (cb) cb.textContent = parseInt(cb.textContent||0)+1;
+    const el = document.createElement('div');
+    el.className = `elive-cmt${cmt.q === 'excellent' ? ' excellent' : ''}`;
+    el.innerHTML = `
+      <div class="elive-cmt-inner">
+        <span class="elive-name-badge" style="background:${cmt.col}">${cmt.u}</span>
+        <span class="elive-cmt-text">${cmt.c}</span>
+      </div>`;
+    stream.appendChild(el);
+    setTimeout(() => {
+      el.classList.add('fading');
+      setTimeout(() => el?.remove(), 420);
+    }, 8000);
 
-    // Quality effects
     if (cmt.q === 'excellent') {
-      _showStudentToast(
-        `<strong>${cmt.u}</strong>: "${cmt.c.substring(0,70)}..."`,
-        'mic', 7500
-      );
-      Voice.speak(`Bình luận xuất sắc từ bạn ${cmt.u}: ${cmt.c}`, voiceRate);
-      // Voice bar on video
-      document.getElementById('student-voice-bar')?.remove();
-      const bar = document.createElement('div');
-      bar.id = 'student-voice-bar';
-      bar.className = 'voice-bar';
-      bar.innerHTML = `
-        <div class="voice-wave">
-          <span style="height:5px"></span><span style="height:11px"></span>
-          <span style="height:16px"></span><span style="height:11px"></span>
-          <span style="height:5px"></span>
-        </div>
-        <span>Đang đọc: <strong>${cmt.u}</strong></span>`;
-      document.querySelector('.svid-wrap')?.appendChild(bar);
-      setTimeout(() => bar?.remove(), 7500);
-      // Switch to chat tab to show it
-      SC.switchPanel('chat');
+      _showStudentToast(`<strong>${cmt.u}</strong>: "${cmt.c.substring(0,70)}..."`, 'star', 6000);
     } else if (cmt.q === 'good') {
-      _showStudentToast(
-        `<strong>${cmt.u}</strong>: "${cmt.c.substring(0,60)}..."`, 'star'
-      );
+      _showStudentToast(`<strong>${cmt.u}</strong>: "${cmt.c.substring(0,60)}..."`, 'star');
     }
   }
 

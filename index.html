@@ -113,30 +113,22 @@
         </div>
       </div>
 
-      <!-- RIGHT SIDE STATS (TikTok style) -->
-      <div class="elive-right-stats">
-        <div class="right-stat">
-          <i class="fas fa-heart" style="color:#FF6B8B"></i>
-          <span id="elder-hearts">312</span>
-        </div>
-        <div class="right-stat">
-          <i class="fas fa-comment" style="color:#fff"></i>
-          <span id="elder-comments">48</span>
-        </div>
-        <div class="right-stat">
-          <i class="fas fa-share" style="color:#aaf"></i>
-          <span>24</span>
-        </div>
-      </div>
-
       <!-- TIKTOK COMMENT STREAM (overlay on video) -->
       <div class="elive-comment-stream" id="elive-comment-stream"></div>
 
-      <!-- BOTTOM BUTTON -->
+      <!-- BOTTOM BAR: mic/cam toggles + end button -->
       <div class="elive-bottom">
-        <button class="btn-end-live" onclick="SC.elderConfirmEnd()">
-          <i class="fas fa-moon"></i> KẾT THÚC
-        </button>
+        <div class="elive-media-row">
+          <button class="media-btn active" id="elder-mic-btn" onclick="SC.toggleElderMic()" title="Tắt/bật micro">
+            <i class="fas fa-microphone" id="elder-mic-icon"></i>
+          </button>
+          <button class="btn-end-live" onclick="SC.elderConfirmEnd()">
+            <i class="fas fa-moon"></i> KẾT THÚC
+          </button>
+          <button class="media-btn active" id="elder-cam-btn" onclick="SC.toggleElderCam()" title="Tắt/bật camera">
+            <i class="fas fa-video" id="elder-cam-icon"></i>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -246,61 +238,80 @@
         </div>
       </div><!-- /view-home -->
 
-      <!-- LIVE VIEW -->
+      <!-- LIVE VIEW — TikTok style -->
       <div id="view-live" class="view live-view hidden">
-        <div class="live-hdr">
-          <div class="live-hdr-left">
-            <div class="live-topic-row">
-              <span class="live-badge-sm">LIVE</span>
-              40 Năm Yêu Một Người
-            </div>
-            <div class="live-host-row"><i class="fas fa-user-circle"></i> Bác Minh · 68 tuổi</div>
-          </div>
-          <div class="live-hdr-right">
-            <div class="viewers-pill"><i class="fas fa-eye"></i> <span id="student-vc">63</span></div>
-            <div class="dur-pill" id="student-dur">00:00</div>
+
+        <!-- Full-screen video layer -->
+        <div class="slive-video-layer">
+          <video id="student-vid" autoplay muted playsinline></video>
+          <div class="svid-ph" id="student-vid-ph">
+            <i class="fas fa-video"></i><p>Đang kết nối với bác Minh...</p>
           </div>
         </div>
 
-        <div class="live-body">
-          <div class="svid-wrap">
-            <video id="student-vid" autoplay muted playsinline></video>
-            <div class="svid-ph" id="student-vid-ph">
-              <i class="fas fa-video"></i><p>Đang kết nối với bác Minh...</p>
-            </div>
-            <div class="vid-overlay-bottom">
-              <div class="rxn-row">
-                <button class="rxn-btn heart" onclick="SC.react('heart')"><i class="fas fa-heart"></i></button>
-                <button class="rxn-btn flower" onclick="SC.react('flower')"><i class="fas fa-spa"></i></button>
-                <button class="rxn-btn clap" onclick="SC.react('clap')"><i class="fas fa-hands-clapping"></i></button>
-                <button class="smart-note-btn" onclick="SC.saveNote()"><i class="fas fa-bolt"></i></button>
+        <!-- TOP BAR overlay -->
+        <div class="slive-topbar">
+          <div class="slive-top-left">
+            <div class="slive-host-row">
+              <div class="slive-host-av">M</div>
+              <div>
+                <div class="slive-host-name">Bác Minh</div>
+                <div class="slive-host-sub">68 tuổi · Cựu kỹ sư</div>
               </div>
-              <div class="rxn-counts" id="rxn-counts">187 ❤️ · 94 👏 · 72 🌸</div>
             </div>
           </div>
-
-          <div class="panel-tabs">
-            <button class="ptab active" id="ptab-notes" onclick="SC.switchPanel('notes')">
-              <i class="fas fa-bolt" style="color:#FFD700"></i> Smart Notes
-              <span class="ptab-badge" id="notes-badge">5</span>
-            </button>
-            <button class="ptab" id="ptab-chat" onclick="SC.switchPanel('chat')">
-              <i class="fas fa-comments"></i> Bình luận
-              <span class="ptab-badge" id="chat-badge">12</span>
-            </button>
-          </div>
-
-          <div id="panel-notes" class="panel-body"></div>
-          <div id="panel-chat" class="panel-body" style="display:none;flex-direction:column">
-            <div class="chat-scroll" id="chat-scroll">
-              <div id="chat-msgs" class="chat-msgs"></div>
-            </div>
-            <div class="chat-input-row">
-              <input id="chat-input" class="chat-inp" placeholder="Đặt câu hỏi cho bác Minh..." maxlength="200">
-              <button class="send-btn" onclick="SC.sendMsg()"><i class="fas fa-paper-plane"></i></button>
-            </div>
+          <div class="slive-top-right">
+            <div class="slive-live-pill"><i class="fas fa-circle"></i> LIVE</div>
+            <div class="slive-viewer-pill"><i class="fas fa-eye"></i> <span id="student-vc">63</span></div>
+            <div class="slive-dur-pill" id="student-dur">00:00</div>
           </div>
         </div>
+
+        <!-- RIGHT ACTION COLUMN (TikTok: heart, clap, flower) -->
+        <div class="svid-right-actions">
+          <div class="svid-action" onclick="SC.react('flower')">
+            <div class="svid-action-btn sa-green"><i class="fas fa-spa"></i></div>
+            <span id="flower-count">72</span>
+          </div>
+          <div class="svid-action" onclick="SC.react('clap')">
+            <div class="svid-action-btn sa-purple"><i class="fas fa-hands-clapping"></i></div>
+            <span id="clap-count">94</span>
+          </div>
+          <div class="svid-action" onclick="SC.react('heart')">
+            <div class="svid-action-btn sa-red"><i class="fas fa-heart"></i></div>
+            <span id="heart-count">187</span>
+          </div>
+        </div>
+
+        <!-- FLOATING COMMENT STREAM (TikTok overlay, bottom-left) -->
+        <div class="student-cmt-stream" id="student-cmt-stream"></div>
+
+        <!-- BOTTOM OVERLAY: chat input + smart note btn -->
+        <div class="slive-bottom-bar">
+          <button class="snote-pop-btn" id="snote-btn" onclick="SC.saveNote()" title="Lưu Smart Note">
+            <i class="fas fa-bolt"></i>
+          </button>
+          <div class="slive-input-wrap">
+            <input id="chat-input" class="slive-inp" placeholder="Đặt câu hỏi cho bác Minh..." maxlength="200">
+            <button class="slive-send-btn" onclick="SC.sendMsg()"><i class="fas fa-paper-plane"></i></button>
+          </div>
+        </div>
+
+        <!-- NOTES DRAWER (slides up from bottom when toggled) -->
+        <div class="snotes-drawer" id="snotes-drawer">
+          <div class="snotes-drawer-hdr">
+            <div class="snotes-drawer-title"><i class="fas fa-bolt" style="color:#FFD700"></i> Smart Notes <span class="ptab-badge" id="notes-badge">5</span></div>
+            <button class="snotes-close-btn" onclick="SC.toggleNotesDrawer()"><i class="fas fa-chevron-down"></i></button>
+          </div>
+          <div id="panel-notes" class="panel-body notes-active"></div>
+        </div>
+
+        <!-- FAB to open notes drawer -->
+        <button class="notes-fab" onclick="SC.toggleNotesDrawer()" id="notes-fab">
+          <i class="fas fa-book-open"></i>
+          <span class="notes-fab-badge" id="notes-fab-badge">5</span>
+        </button>
+
       </div><!-- /view-live -->
 
       <!-- PROFILE VIEW -->
